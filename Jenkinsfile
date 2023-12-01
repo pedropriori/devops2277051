@@ -1,18 +1,36 @@
 pipeline {
     agent any
-
+		
     stages {
-    	stage('Test') {
+    	stage('Info') {
 				steps {
 					sh '''
-
-						docker build
-						docker compose up
-                        npm install
-                        npm test
-						
+						docker compose version
 					'''
 				}
     	}
+    	stage('Build') {
+				steps {
+					sh '''docker compose build'''
+				}
+    	}
+			stage('Run Tests') {
+				agent {
+					docker { image 'node:20.10.0' }
+				}
+				steps {
+					echo 'e2e Tests'
+					sh 'npm install'
+					sh 'npm run test:e2e'
+					
+					echo 'CI Tests'
+					sh 'npm run test:ci'
+				}
+			}
+			stage('Run Application') {
+				steps {
+					sh 'docker compose up'
+				}
+			}
     }
 }
